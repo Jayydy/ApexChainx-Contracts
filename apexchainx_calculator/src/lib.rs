@@ -192,12 +192,13 @@ impl SLACalculatorContract {
         let performance_ratio = (mttr_minutes * 100) / threshold;
 
         let (multiplier, rating) = if performance_ratio < 50 {
-            (200, symbol_short!("exceptional"))
+            (200, symbol_short!("top"))
         } else if performance_ratio < 75 {
-            (150, symbol_short!("excellent"))
+            (150, symbol_short!("excel"))
         } else {
             (100, symbol_short!("good"))
         };
+
 
         let reward = (cfg.reward_base * (multiplier as i128)) / 100;
 
