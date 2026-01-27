@@ -145,6 +145,13 @@ impl SLACalculatorContract {
         env.storage().instance().set(&CONFIG_KEY, &configs);
     }
 
+    pub fn list_configs(env: Env) -> Result<Map<Symbol, SLAConfig>, SLAError> {
+    env.storage()
+        .instance()
+        .get(&CONFIG_KEY)
+        .ok_or(SLAError::NotInitialized)
+}
+
     pub fn get_config(env: Env, severity: Symbol) -> SLAConfig {
         let configs: Map<Symbol, SLAConfig> = env
             .storage()
