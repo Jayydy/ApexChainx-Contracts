@@ -1,0 +1,3 @@
+[workspace]
+members = ["apexchainx_calculator"]
+resolver = "2"
