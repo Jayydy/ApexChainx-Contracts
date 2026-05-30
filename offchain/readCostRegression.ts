@@ -1,5 +1,6 @@
 /**
- * SC-016: Read-cost regression tests for history and config-bundle helpers.
+ * SC-016 / SC-W5-029: Read-cost regression tests for history, config-bundle,
+ * and version negotiation helpers.
  * Simulates budget-aware reads against contract view helpers and asserts
  * that response sizes stay within documented thresholds.
  */
@@ -8,6 +9,7 @@ const READ_BUDGET_LIMITS = {
   historyRead: 512,    // bytes
   configBundle: 256,
   metadataRead: 128,
+  versionInfo: 96,     // SC-W5-029: version negotiation must be compact
 };
 
 interface ReadSample {
@@ -49,12 +51,22 @@ const mockMetadataRead = {
   operator: "GABC",
 };
 
+// SC-W5-029: version negotiation response must be compact
+const mockVersionInfo = {
+  storage_version: 1,
+  result_schema_version: 1,
+  needs_migration: false,
+  is_paused: false,
+  contract_name: "sla_calc",
+};
+
 const samples: ReadSample[] = [
   { helper: "historyRead", payload: mockHistoryRead },
   { helper: "configBundle", payload: mockConfigBundle },
   { helper: "metadataRead", payload: mockMetadataRead },
+  { helper: "versionInfo", payload: mockVersionInfo },
 ];
 
-console.log("[SC-016] Read-cost regression checks:");
+console.log("[SC-016/SC-W5-029] Read-cost regression checks:");
 samples.forEach(assertReadBudget);
 console.log("All read-cost checks passed.");

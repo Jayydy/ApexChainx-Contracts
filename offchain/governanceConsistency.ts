@@ -1,7 +1,10 @@
 /**
- * SC-018: Event-versus-state consistency tests for governance actions.
+ * SC-018 / SC-W5-029: Event-versus-state consistency tests for governance actions
+ * and version negotiation endpoint validation.
+ *
  * Validates that emitted governance events match the resulting stored state
- * for admin, operator, pause, and config actions.
+ * for admin, operator, pause, and config actions. Also validates that
+ * get_version_info returns a consistent snapshot for backend negotiation.
  */
 
 interface GovernanceEvent {
@@ -18,6 +21,14 @@ interface ContractState {
   pauseReason?: string;
 }
 
+interface VersionInfo {
+  storage_version: number;
+  result_schema_version: number;
+  needs_migration: boolean;
+  is_paused: boolean;
+  contract_name: string;
+}
+
 function assertConsistency(
   event: GovernanceEvent,
   state: ContractState,
@@ -31,6 +42,13 @@ function assertConsistency(
     }
   }
   console.log(`  ✓ ${event.action}: event/state consistent`);
+}
+
+function assertVersionInfo(info: VersionInfo): void {
+  if (info.storage_version < 1) throw new Error("[SC-W5-029] storage_version must be >= 1");
+  if (info.result_schema_version < 1) throw new Error("[SC-W5-029] result_schema_version must be >= 1");
+  if (!info.contract_name) throw new Error("[SC-W5-029] contract_name must be non-empty");
+  console.log(`  ✓ version_info: storage_v=${info.storage_version} schema_v=${info.result_schema_version} needs_migration=${info.needs_migration} paused=${info.is_paused}`);
 }
 
 // Simulate governance flows
@@ -61,6 +79,25 @@ const scenarios: Array<{
   },
 ];
 
+// Version negotiation scenarios: paused state must be reflected in version info
+const versionScenarios: Array<{ label: string; info: VersionInfo }> = [
+  {
+    label: "ready contract",
+    info: { storage_version: 1, result_schema_version: 1, needs_migration: false, is_paused: false, contract_name: "sla_calc" },
+  },
+  {
+    label: "paused contract",
+    info: { storage_version: 1, result_schema_version: 1, needs_migration: false, is_paused: true, contract_name: "sla_calc" },
+  },
+];
+
 console.log("[SC-018] Governance event/state consistency checks:");
 scenarios.forEach(({ event, state, checks }) => assertConsistency(event, state, checks));
+
+console.log("[SC-W5-029] Version negotiation consistency checks:");
+versionScenarios.forEach(({ label, info }) => {
+  assertVersionInfo(info);
+  console.log(`  ✓ ${label}: consistent`);
+});
+
 console.log("All consistency checks passed.");

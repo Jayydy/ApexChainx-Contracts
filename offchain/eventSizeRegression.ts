@@ -1,5 +1,6 @@
 /**
- * SC-017: Event-size regression tests for lifecycle and SLA calculation events.
+ * SC-017 / SC-W5-029: Event-size regression tests for lifecycle, SLA calculation,
+ * and version negotiation events.
  * Catches payload bloat before deployment by asserting max byte sizes per event type.
  */
 
@@ -9,6 +10,7 @@ const EVENT_SIZE_LIMITS: Record<string, number> = {
   contract_unpaused: 80,
   admin_proposed: 120,
   operator_proposed: 120,
+  version_info_read: 96,  // SC-W5-029: version negotiation event must be compact
 };
 
 interface ContractEvent {
@@ -53,8 +55,14 @@ const events: ContractEvent[] = [
     type: "operator_proposed",
     payload: { proposed: "GDEF789", proposer: "GXYZ456" },
   },
+  {
+    // SC-W5-029: version negotiation read is not an emitted event but its
+    // response payload must stay compact for backend startup latency budgets.
+    type: "version_info_read",
+    payload: { storage_version: 1, result_schema_version: 1, needs_migration: false, is_paused: false },
+  },
 ];
 
-console.log("[SC-017] Event-size regression checks:");
+console.log("[SC-017/SC-W5-029] Event-size regression checks:");
 events.forEach(assertEventSize);
 console.log("All event-size checks passed.");

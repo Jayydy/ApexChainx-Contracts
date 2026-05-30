@@ -3223,3 +3223,75 @@ fn test_event_replay_after_prune_history_page_reflects_pruned_state() {
         assert_eq!(history.get(i).unwrap().outage_id, symbol(&env, "NEW"));
     }
 }
+
+// ============================================================
+// SC-W5-029 – Version negotiation endpoint tests
+// ============================================================
+
+#[test]
+fn test_get_version_info_returns_correct_versions_after_init() {
+    let (_env, client, _actors) = setup();
+    let info = client.get_version_info();
+    assert_eq!(info.storage_version, 1);
+    assert_eq!(info.result_schema_version, 1);
+    assert!(!info.needs_migration);
+    assert!(!info.is_paused);
+    assert_eq!(info.contract_name, symbol_short!("sla_calc"));
+}
+
+#[test]
+fn test_get_version_info_reflects_paused_state() {
+    let (env, client, actors) = setup();
+    client.pause(&actors.admin, &soroban_sdk::String::from_str(&env, "upgrade"));
+    let info = client.get_version_info();
+    assert!(info.is_paused);
+    assert!(!info.needs_migration);
+}
+
+#[test]
+fn test_get_version_info_reflects_unpaused_state() {
+    let (env, client, actors) = setup();
+    client.pause(&actors.admin, &soroban_sdk::String::from_str(&env, "test"));
+    client.unpause(&actors.admin);
+    let info = client.get_version_info();
+    assert!(!info.is_paused);
+}
+
+#[test]
+fn test_get_version_info_is_deterministic_across_repeated_calls() {
+    let (_env, client, _actors) = setup();
+    let a = client.get_version_info();
+    let b = client.get_version_info();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn test_get_version_info_not_affected_by_sla_calculations() {
+    let (_env, client, actors) = setup();
+    let before = client.get_version_info();
+    client.calculate_sla(&actors.operator, &symbol_short!("OUT1"), &symbol_short!("high"), &10);
+    client.calculate_sla(&actors.operator, &symbol_short!("OUT2"), &symbol_short!("critical"), &20);
+    let after = client.get_version_info();
+    assert_eq!(before.storage_version, after.storage_version);
+    assert_eq!(before.result_schema_version, after.result_schema_version);
+    assert_eq!(before.needs_migration, after.needs_migration);
+}
+
+#[test]
+#[should_panic]
+fn test_get_version_info_panics_when_not_initialized() {
+    let env = Env::default();
+    let cid = env.register_contract(None, SLACalculatorContract);
+    let client = SLACalculatorContractClient::new(&env, &cid);
+    // No initialize call — must panic (NotInitialized)
+    client.get_version_info();
+}
+
+#[test]
+fn test_get_version_info_needs_migration_false_after_migrate() {
+    let (_env, client, actors) = setup();
+    // migrate on an already-current contract is a no-op; needs_migration stays false
+    client.migrate(&actors.admin);
+    let info = client.get_version_info();
+    assert!(!info.needs_migration);
+}

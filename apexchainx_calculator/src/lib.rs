@@ -194,6 +194,32 @@ pub struct StorageVersionInfo {
     pub needs_migration: bool,
 }
 
+/// SC-W5-029 – Combined version negotiation response for backend startup handshake.
+///
+/// Backend consumers call `get_version_info` once at startup (or after an upgrade)
+/// to determine whether the contract is safe to use. All version-relevant fields
+/// are returned in a single read to minimise round-trips.
+///
+/// Decision logic for backends:
+/// - `needs_migration == true`  → block operations, alert admin to call `migrate`
+/// - `is_paused == true`        → surface pause reason, retry after `unpause`
+/// - `storage_version != result_schema_version` (unexpected) → log and alert
+/// - otherwise                  → contract is ready; proceed normally
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VersionInfo {
+    /// Storage schema version stamped in contract storage.
+    pub storage_version: u32,
+    /// Result schema version for SLAResult field layout.
+    pub result_schema_version: u32,
+    /// True when stored storage version differs from the binary's expected version.
+    pub needs_migration: bool,
+    /// True when the contract is currently paused.
+    pub is_paused: bool,
+    /// Human-readable contract name for log correlation.
+    pub contract_name: Symbol,
+}
+
 // -----------------------------------------------------------------------
 // Contract implementation
 // -----------------------------------------------------------------------
@@ -1213,8 +1239,7 @@ impl SLACalculatorContract {
             .unwrap_or(MAX_HISTORY_SIZE))
     }
 
-    // -------------------------------------------------------------------
-    // SC-021 – Migration state read helper
+    /// SC-021 – Migration state read helper
     // -------------------------------------------------------------------
 
     /// Returns the storage version and migration posture.
@@ -1235,6 +1260,35 @@ impl SLACalculatorContract {
             stored_version,
             expected_version: STORAGE_VERSION,
             needs_migration: stored_version != STORAGE_VERSION,
+        })
+    }
+
+    // -------------------------------------------------------------------
+    // SC-W5-029 – Version negotiation endpoint for backend handshake
+    // -------------------------------------------------------------------
+
+    /// Returns a combined version negotiation snapshot for backend startup.
+    ///
+    /// Intentionally bypasses `check_version` so it remains callable even when
+    /// the contract is in a pre-migration state — backends must be able to read
+    /// this before deciding whether to call `migrate`.
+    pub fn get_version_info(env: Env) -> Result<VersionInfo, SLAError> {
+        let stored_version: u32 = env
+            .storage()
+            .instance()
+            .get(&STORAGE_VERSION_KEY)
+            .ok_or(SLAError::NotInitialized)?;
+        let is_paused: bool = env
+            .storage()
+            .instance()
+            .get(&PAUSED_KEY)
+            .unwrap_or(false);
+        Ok(VersionInfo {
+            storage_version: stored_version,
+            result_schema_version: RESULT_SCHEMA_VERSION,
+            needs_migration: stored_version != STORAGE_VERSION,
+            is_paused,
+            contract_name: symbol_short!("sla_calc"),
         })
     }
 }
