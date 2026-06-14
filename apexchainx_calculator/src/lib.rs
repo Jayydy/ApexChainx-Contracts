@@ -241,57 +241,103 @@ pub enum SLAError {
 }
 
 // -----------------------------------------------------------------------
-// Types
+// Core Data Types
 // -----------------------------------------------------------------------
+//
+// These types form the contract's public API surface. They are serialised
+// and deserialised by the Soroban SDK and exposed to backend consumers
+// through read-only views and event payloads.
+//
+// All types derive Clone, Debug, and PartialEq for testability.
+// Types marked #[contracttype] are Soroban-contract-compatible.
+// -----------------------------------------------------------------------
+
+/// Configuration parameters for a single severity level.
+/// Each severity (critical, high, medium, low) has its own SLAConfig.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SLAConfig {
+    /// Maximum allowed repair time in minutes before SLA is violated.
     pub threshold_minutes: u32,
+    /// Penalty amount charged per minute of overtime (positive integer).
     pub penalty_per_minute: i128,
+    /// Base reward amount for meeting SLA targets (positive integer).
     pub reward_base: i128,
 }
 
+/// Complete result of an SLA calculation, returned by calculate_sla
+/// and calculate_sla_view.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SLAResult {
+    /// Unique identifier for the outage event.
     pub outage_id: Symbol,
-    pub status: Symbol, // "met" | "viol"
+    /// SLA outcome: "met" (achieved) or "viol" (violated).
+    pub status: Symbol,
+    /// Measured time to repair in minutes.
     pub mttr_minutes: u32,
+    /// Threshold that was applied for this severity.
     pub threshold_minutes: u32,
-    pub amount: i128,         // negative = penalty, positive = reward
-    pub payment_type: Symbol, // "rew" | "pen"
-    pub rating: Symbol,       // "top" | "excel" | "good" | "poor"
-    pub config_version_hash: u64, // deterministic binding to config used for evaluation
-    pub recorded_at: u64,     // SC-063: ledger timestamp at calculation time
+    /// Financial outcome: negative = penalty, positive = reward.
+    pub amount: i128,
+    /// Payment classification: "rew" (reward) or "pen" (penalty).
+    pub payment_type: Symbol,
+    /// Performance rating: "top" | "excel" | "good" | "poor".
+    pub rating: Symbol,
+    /// Deterministic hash of the config used for this evaluation.
+    pub config_version_hash: u64,
+    /// Ledger timestamp at calculation time. (SC-063)
+    pub recorded_at: u64,
 }
 
+/// A single severity-to-config mapping entry in a config snapshot.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SLAConfigEntry {
+    /// Severity level (critical, high, medium, low).
     pub severity: Symbol,
+    /// Configuration parameters for this severity.
     pub config: SLAConfig,
 }
 
+/// Ordered snapshot of all severity configurations, suitable for backend
+/// consumption. Entries are in canonical severity order.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SLAConfigSnapshot {
+    /// Schema version label (e.g., "v1").
     pub version: Symbol,
+    /// Config entries in canonical severity order.
     pub entries: Vec<SLAConfigEntry>,
 }
 
+/// Describes the result encoding schema for backend consumers.
+/// Backends use this to interpret SLA result symbols without
+/// hard-coding symbol values.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct SLAResultSchema {
+    /// Schema version label.
     pub version: Symbol,
+    /// Numeric schema version (incremented on breaking changes).
     pub schema_version: u32,
+    /// Symbol for SLA met status.
     pub status_met: Symbol,
+    /// Symbol for SLA violated status.
     pub status_violated: Symbol,
+    /// Symbol for reward payment type.
     pub payment_reward: Symbol,
+    /// Symbol for penalty payment type.
     pub payment_penalty: Symbol,
+    /// Symbol for exceptional rating.
     pub rating_exceptional: Symbol,
+    /// Symbol for excellent rating.
     pub rating_excellent: Symbol,
+    /// Symbol for good rating.
     pub rating_good: Symbol,
+    /// Symbol for poor rating.
     pub rating_poor: Symbol,
+    /// Whether the SLAResult includes config_version_hash.
     pub includes_config_version_hash: bool,
 }
 
