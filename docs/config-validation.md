@@ -70,21 +70,37 @@ validation parameters:
 
 ## Error Handling
 
-### Error Codes
+### Error Reference
 
-| Error Code | Error Name | Description |
-|------------|------------|-------------|
-| 8 | InvalidThreshold | Threshold minutes outside valid range or severity-specific limits |
-| 9 | InvalidPenalty | Penalty per minute outside valid range or severity-specific limits |
-| 10 | InvalidReward | Reward base outside valid range |
-| 11 | InvalidSeverity | Severity not in supported list (critical, high, medium, low) |
+| Error Code | Name | Trigger Condition | Recovery |
+|------------|------|-------------------|----------|
+| 8 | `InvalidThreshold` | Threshold outside valid range or severity-specific limit | Adjust to valid range (1–1440, severity-dependent) |
+| 9 | `InvalidPenalty` | Penalty per minute outside valid range | Adjust to valid range (1–10,000, severity-dependent) |
+| 10 | `InvalidReward` | Reward base outside valid range | Adjust to valid range (1–100,000) |
+| 11 | `InvalidSeverity` | Severity not in supported set | Use one of: critical, high, medium, low |
 
-### Deterministic Failure
+### Deterministic Failure Guarantees
 
-All validation failures are deterministic:
-- The same invalid parameters will always produce the same error
-- No partial state changes occur - validation happens before any storage updates
-- Error codes are specific to help identify the exact validation issue
+| Property | Guarantee |
+|----------|-----------|
+| Reproducibility | Same invalid parameters always produce the same error |
+| State safety | No partial state changes — validation occurs before any storage writes |
+| Error specificity | Each error code maps to exactly one validation condition |
+| Gas efficiency | Failed validations do not consume gas beyond the validation check |
+
+### Error Flow
+
+```
+Input Parameters
+       ↓
+[General Range Validation]  ←── Errors 8, 9, 10
+       ↓
+[Severity-Specific Validation]  ←── Error 8, 9
+       ↓
+[Severity Existence Check]  ←── Error 11
+       ↓
+[Event Emission on Success]  ←── Config saved
+```
 
 ## Default Configuration Values
 
