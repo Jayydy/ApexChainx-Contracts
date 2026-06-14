@@ -1,3 +1,25 @@
+# =============================================================================
+# ApexChainx Contracts — CI Pipeline
+# =============================================================================
+#
+# Triggered on:
+#   - Push to main branch
+#   - Pull requests targeting main
+#
+# Pipeline stages:
+#   1. Code Quality — rustfmt formatting check
+#   2. Static Analysis — clippy linting (no warnings allowed)
+#   3. Unit & Integration Tests — cargo test (full suite)
+#   4. WASM Build — release build for wasm32 target
+#   5. no-std Compliance — verify no standard library usage
+#   6. Binary Size Check — enforce contract size budget (100 KB soft limit)
+#
+# Reference:
+#   - SC-077: WASM target compilation verification
+#   - SC-044: no-std compliance enforcement
+#   - SC-078: Contract binary size monitoring
+# =============================================================================
+
 name: CI
 
 on:
@@ -6,9 +28,13 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Test & Build
+    name: Build, Test & Verify
     runs-on: ubuntu-latest
 
     steps:
