@@ -354,52 +354,64 @@ impl SLAContract {
 
 ## ✅ Pull Request Guidelines
 
-### Before Submitting
+### Before Submitting Checklist
 
-- [ ] Code follows the style guidelines
-- [ ] Self-review completed
-- [ ] Tests added/updated and passing
-- [ ] Documentation updated
-- [ ] No console.log or print statements
-- [ ] Environment variables in .env.example
-- [ ] Breaking changes clearly documented
+#### Required Checks
+
+- [ ] Code follows the project's style guidelines
+- [ ] Self-review completed — read your own diff first
+- [ ] Tests added/updated and all passing
+- [ ] Documentation updated (README, docs/, inline comments)
+- [ ] No `console.log`, `println!`, or `dbg!` statements left in code
+- [ ] Environment variables documented in `.env.example`
+- [ ] Breaking changes clearly documented in the PR description
+
+#### Smart Contract Specific
+
+- [ ] `cargo test` passes
+- [ ] `cargo clippy -- -D warnings` produces no warnings
+- [ ] `cargo fmt -- --check` confirms formatting compliance
+- [ ] `cargo check --target wasm32-unknown-unknown --lib` passes (no-std check)
+- [ ] New public functions are added to the result schema or documented
+- [ ] Any breaking change to `SLAResult` increments `RESULT_SCHEMA_VERSION`
 
 ### PR Description Template
 
 ```markdown
 ## Description
-Brief description of the changes
+
+Brief description of the changes.
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Related Issue
+
 Closes #123
 
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests added/updated
 - [ ] Manual testing completed
 
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] Tests pass locally
-
 ## Screenshots (if applicable)
+
 [Add screenshots here]
 
 ## Additional Notes
-Any additional information for reviewers
+
+Any additional information for reviewers.
 ```
 
 ### For Stellar Wave Contributors
 
 Include in your PR description:
+
 - **Testnet transaction hashes** (for blockchain features)
 - **Video/GIF** of feature working (for UI changes)
 - **Performance metrics** (if relevant)
