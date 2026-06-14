@@ -76,51 +76,118 @@ const MAX_HISTORY_SIZE: u32 = 1000;
 const RETENTION_LIMIT_KEY: Symbol = symbol_short!("RETLIM");
 
 // -----------------------------------------------------------------------
-// Events
+// Event Constants
+// -----------------------------------------------------------------------
 //
-// All events share the same topic layout:
+// All events use a standardised 3-topic layout:
 //   topic[0] = event name (Symbol constant below)
 //   topic[1] = event version ("v1")
 //   topic[2] = event-specific context (severity, caller address, etc.)
 //
-// Event payloads (data tuple field order):
+// Payload field ordering and types are defined below per event variant.
+// Breaking changes must increment the version symbol (v2, v3, ...).
+// Additive fields (appended to the end) are NOT considered breaking.
 //
-//   sla_calc  → (outage_id: Symbol, status: Symbol, payment_type: Symbol,
-//                rating: Symbol, mttr_minutes: u32, threshold_minutes: u32,
-//                amount: i128)
+// Full schema documentation: event_schema.rs
 //
-//   cfg_upd   → (threshold_minutes: u32, penalty_per_minute: i128,
-//                reward_base: i128)
-//             context = severity Symbol
+// ===== Event Payload Schemas =====
 //
-//   paused    → (true,)
-//   unpause   → (false,)
-//             context = caller Address
+// sla_calc  → (outage_id: Symbol, status: Symbol, payment_type: Symbol,
+//              rating: Symbol, mttr_minutes: u32, threshold_minutes: u32,
+//              amount: i128)
+//   context: severity Symbol
 //
-//   op_set    → (new_operator: Address,)
-//             context = caller Address
+// cfg_upd   → (threshold_minutes: u32, penalty_per_minute: i128,
+//              reward_base: i128)
+//   context: severity Symbol
 //
-//   pruned    → (removed_count: u32, kept_count: u32)
-//             context = caller Address
+// paused    → (true,)
+//   context: caller Address
 //
-// Versioning: breaking payload changes increment the version symbol (v2, …).
-// Additive fields are not considered breaking.
+// unpause   → (false,)
+//   context: caller Address
+//
+// op_set    → (new_operator: Address,)
+//   context: caller Address
+//
+// pruned    → (removed_count: u32, kept_count: u32)
+//   context: caller Address
+//
+// pruned_a  → (removed_count: u32, kept_count: u32)
+//   context: caller Address
+//
+// adm_prop  → (new_admin: Address,)
+//   context: caller Address
+//
+// adm_acc   → ()
+//   context: caller Address
+//
+// adm_can   → ()
+//   context: caller Address
+//
+// adm_ren   → ()
+//   context: caller Address
+//
+// op_prop   → (new_operator: Address,)
+//   context: caller Address
+//
+// op_acc    → ()
+//   context: caller Address
+//
+// op_can    → ()
+//   context: caller Address
+//
+// set_int   → (outage_id: Symbol, status: Symbol, payment_type: Symbol,
+//              amount: i128, config_version_hash: u64, recorded_at: u64)
+//   context: severity Symbol
 // -----------------------------------------------------------------------
+
+/// Emitted on successful SLA calculation. Primary event for backend consumers.
 const EVENT_SLA_CALC: Symbol = symbol_short!("sla_calc");
+
+/// Emitted alongside sla_calc for settlement intent reconciliation.
 const EVENT_SETTLE_INTENT: Symbol = symbol_short!("set_int");
+
+/// Emitted when configuration is updated via set_config.
 const EVENT_CONFIG_UPD: Symbol = symbol_short!("cfg_upd");
-const EVENT_PAUSED: Symbol = symbol_short!("paused"); // #27
-const EVENT_UNPAUSED: Symbol = symbol_short!("unpause"); // #27
-const EVENT_OP_SET: Symbol = symbol_short!("op_set"); // #28
+
+/// Emitted when the contract is paused by admin. (#27)
+const EVENT_PAUSED: Symbol = symbol_short!("paused");
+
+/// Emitted when the contract is unpaused by admin. (#27)
+const EVENT_UNPAUSED: Symbol = symbol_short!("unpause");
+
+/// Emitted when the operator address is changed. (#28)
+const EVENT_OP_SET: Symbol = symbol_short!("op_set");
+
+/// Emitted after a prune_history call removes entries.
 const EVENT_PRUNED: Symbol = symbol_short!("pruned");
-const EVENT_PRUNED_AGE: Symbol = symbol_short!("pruned_a"); // SC-063
-const EVENT_ADMIN_PROP: Symbol = symbol_short!("adm_prop"); // #63
-const EVENT_ADMIN_ACC: Symbol = symbol_short!("adm_acc"); // #63
-const EVENT_ADMIN_CAN: Symbol = symbol_short!("adm_can"); // SC-024
-const EVENT_ADMIN_REN: Symbol = symbol_short!("adm_ren"); // #65
-const EVENT_OP_PROP: Symbol = symbol_short!("op_prop"); // #64
-const EVENT_OP_ACC: Symbol = symbol_short!("op_acc"); // #64
-const EVENT_OP_CAN: Symbol = symbol_short!("op_can"); // SC-024
+
+/// Emitted after a prune_history_by_age call removes entries. (SC-063)
+const EVENT_PRUNED_AGE: Symbol = symbol_short!("pruned_a");
+
+/// Emitted when a new admin is proposed. (#63)
+const EVENT_ADMIN_PROP: Symbol = symbol_short!("adm_prop");
+
+/// Emitted when a pending admin proposal is accepted. (#63)
+const EVENT_ADMIN_ACC: Symbol = symbol_short!("adm_acc");
+
+/// Emitted when a pending admin proposal is cancelled. (SC-024)
+const EVENT_ADMIN_CAN: Symbol = symbol_short!("adm_can");
+
+/// Emitted when the admin permanently renounces their role. (#65)
+const EVENT_ADMIN_REN: Symbol = symbol_short!("adm_ren");
+
+/// Emitted when a new operator is proposed. (#64)
+const EVENT_OP_PROP: Symbol = symbol_short!("op_prop");
+
+/// Emitted when a pending operator proposal is accepted. (#64)
+const EVENT_OP_ACC: Symbol = symbol_short!("op_acc");
+
+/// Emitted when a pending operator proposal is cancelled. (SC-024)
+const EVENT_OP_CAN: Symbol = symbol_short!("op_can");
+
+/// Canonical event version symbol used by all events.
 const EVENT_VERSION: Symbol = symbol_short!("v1");
 
 // -----------------------------------------------------------------------
