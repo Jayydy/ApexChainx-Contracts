@@ -117,25 +117,69 @@ Future contract for splitting shared outage costs between multiple parties.
 
 ## Architecture
 
-Contracts are:
+### Design Principles
 
-- stateless where possible
-- deterministic
-- executed via backend
-- validated by Stellar network
+| Principle | Description |
+|-----------|-------------|
+| **Stateless** | Contracts minimize on-chain state; configuration is the primary persisted data |
+| **Deterministic** | Same inputs always produce identical outputs — no randomness |
+| **Backend-Mediated** | All contract invocations flow through the backend API layer |
+| **Network-Validated** | Stellar consensus validates all contract executions |
 
-Flow:
-Backend → Contract Invocation → Result → Payment Execution
+### Execution Flow
+
+```
+Backend  ──→  Contract Invocation  ──→  Result Processing  ──→  Payment Execution
+    ↑                                                                     |
+    └─────────────────────  Event Stream Replay  ←─────────────────────────┘
+```
 
 ---
 
-## Important Constraints
+## Constraints & Design Principles
 
-- calculations must be deterministic
-- no floating point errors (use integers)
-- gas cost must be minimized
-- contracts must be idempotent where applicable
-- inputs must be validated strictly
+### Determinism
+
+All contract computations must be **fully deterministic**. This is non-negotiable
+because:
+- Backend and contract logic must produce identical results
+- Event replay depends on reproducible outcomes
+- Audit trails require verifiable computation
+
+### Integer Math
+
+```
+❌ Floating point:  NOT ALLOWED
+✅ Integer math:    ALWAYS REQUIRED
+```
+
+No floating point operations. All calculations use integer arithmetic with
+appropriate precision scaling.
+
+### Gas Optimization
+
+| Strategy | Rationale |
+|----------|-----------|
+| Minimize storage writes | Each write consumes significant gas |
+| Avoid loops over unbounded data | Gas costs scale with iteration count |
+| Use view functions for reads | Read-only calls have no gas cost |
+| Batch operations where possible | Reduce per-operation overhead |
+
+### Idempotency
+
+Contracts must be idempotent where applicable:
+- Re-processing the same SLA calculation returns the same result
+- Duplicate event consumption does not produce errors
+- Configuration updates are idempotent for same parameters
+
+### Input Validation
+
+All function inputs are validated at the contract boundary before any state
+changes occur:
+- Severity levels are checked against supported values
+- Thresholds and penalties are validated as positive integers
+- Addresses are verified for format correctness
+- Bounds checking on all numeric parameters
 
 ---
 
