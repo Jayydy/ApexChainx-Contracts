@@ -113,16 +113,44 @@ The active contract implementation is in:
 
 ```text
 apexchainx-contracts/
-├── docs/
-│   ├── CODEX_CONTEXT.md
-│   └── PROJECT_CONTEXT.md
-├── apexchainx_calculator/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                 # CI pipeline: fmt, clippy, test, wasm build
+│       ├── release-hash.yml       # Release artifact SHA-256 manifest
+│       └── security.yml           # cargo-audit dependency scanning
+├── apexchainx_calculator/         # Core contract crate
 │   ├── Cargo.toml
+│   ├── test_snapshots/
+│   │   └── tests/                 # Golden test vectors for backend parity
+│   ├── src/
+│   │   ├── lib.rs                 # Contract entry point & storage
+│   │   ├── tests.rs               # Integration test suite
+│   │   ├── version_negotiation.rs # Multi-contract versioning protocol
+│   │   ├── storage_version.rs     # Storage schema versioning
+│   │   ├── event_schema.rs        # Canonical event definitions
+│   │   ├── event_correlation.rs   # Event grouping and correlation
+│   │   ├── topic_stability_tests.rs
+│   │   ├── payload_versioning_tests.rs
+│   │   └── ...                    # Additional test and utility modules
 │   └── src/
-│       ├── lib.rs
-│       └── tests.rs
+├── artifacts/                     # Test artifacts and snapshots
+├── docs/                          # Project documentation
+│   ├── CODEX_CONTEXT.md
+│   ├── PROJECT_CONTEXT.md
+│   ├── config-validation.md
+│   └── sc-w5-storage-and-cost-baselines.md
+├── offchain/                      # Off-chain helper scripts
+├── scripts/                       # Build, test, and utility scripts
+├── tests/                         # TypeScript/integration test suites
+├── tooling/                       # Release, CI, and security tooling
+├── tools/                         # Analytical and utility tools
+├── ts/                            # TypeScript helpers for governance, config
+├── Cargo.toml                     # Workspace manifest
 ├── CONTRIBUTING.md
+├── CHANGELOG.md
 ├── README.md
+├── TODO.md
+└── pers-store/                    # Persistent storage test fixtures
 ```
 
 ## What Is Actually In This Repo
