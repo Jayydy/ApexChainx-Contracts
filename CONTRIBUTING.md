@@ -1,29 +1,58 @@
 # Contributing to ApexChainx
 
-First off, thank you for considering contributing to ApexChainx! It's people like you that make ApexChainx such a great tool for network operations teams.
+First off, thank you for considering contributing to ApexChainx! Your time and
+expertise help make this project better for everyone in the Stellar ecosystem.
 
-## 🌊 Participating in Stellar Wave
+## Table of Contents
 
-ApexChainx is part of the [Stellar Wave Program](https://www.drips.network/wave/stellar)! If you're here from the Wave:
+- [Code of Conduct](#code-of-conduct)
+- [Stellar Wave Program](#stellar-wave-program)
+- [Ways to Contribute](#ways-to-contribute)
+- [Getting Started](#getting-started)
+- [Development Workflow](#development-workflow)
+- [Code Style Guidelines](#code-style-guidelines)
+- [Pull Request Guidelines](#pull-request-guidelines)
+- [Testing Guidelines](#testing-guidelines)
+- [Documentation Guidelines](#documentation-guidelines)
+- [Security Guidelines](#security-guidelines)
+- [Reporting Bugs](#reporting-bugs)
+- [Suggesting Features](#suggesting-features)
+- [Getting Help](#getting-help)
+
+---
+
+## Code of Conduct
+
+This project adheres to a code of conduct that all contributors are expected to
+follow. Please read [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) before contributing.
+
+---
+
+## 🌊 Stellar Wave Program
+
+ApexChainx participates in the [Stellar Wave Program](https://www.drips.network/wave/stellar)!
+
+### How to Participate
 
 1. **Browse Issues**: Look for issues tagged with `Stellar Wave`
 2. **Apply to Work**: Comment on the issue you want to work on
 3. **Get Assigned**: Wait for a maintainer to assign you
 4. **Submit PR**: Create a pull request when ready
 
-**Important**: Only one contributor per issue. First to apply and get assigned gets the work.
+> **Important:** Only one contributor per issue. First to apply and get assigned
+> gets the work.
 
 ## 🤝 Ways to Contribute
 
-There are many ways to contribute to ApexChainx:
-
-- **Report bugs** and issues
-- **Suggest new features** or enhancements
-- **Fix bugs** and implement features
-- **Improve documentation**
-- **Write tests** to increase coverage
-- **Review pull requests**
-- **Help answer questions** in discussions
+| Contribution Type | Description | Ideal For |
+|------------------|-------------|-----------|
+| 🐛 Bug Reports | Report issues with clear reproduction steps | All skill levels |
+| 💡 Feature Suggestions | Propose new capabilities with use cases | Experienced users |
+| 🔧 Bug Fixes | Submit PRs with tested fixes | Developers |
+| 📖 Documentation | Improve guides, add examples, fix typos | Writers & developers |
+| 🧪 Tests | Increase coverage, add edge cases | QA & developers |
+| 👀 Code Reviews | Review pull requests for quality | Senior developers |
+| 💬 Community Support | Help answer questions in discussions | All skill levels |
 
 ## 🚀 Getting Started
 
